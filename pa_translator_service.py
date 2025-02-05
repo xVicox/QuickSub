@@ -278,10 +278,6 @@ class PATranslatorService:
                 for line in content:
                     line = line + "\n"
                     file.write(line)
-            # here we notice the user that the translation is over and the file is written
-            from gui import SubtitleTranslatorGUI
-            gui = SubtitleTranslatorGUI.get_instance()
-            gui.on_translate_button_clicked(True)
 
         except Exception as e:
             print(f"Error writing to file: {e}")

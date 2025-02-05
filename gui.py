@@ -1,5 +1,7 @@
 import os
 
+
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -11,11 +13,12 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHBoxLayout, QSizePolicy,
-    QMessageBox
+    QMessageBox, QProgressBar
 )
 
 from pa_translator_service import PATranslatorService
 from translation_payload import TranslationPayload
+from translation_worker import TranslationWorker
 
 class SubtitleTranslatorGUI(QMainWindow):
 
@@ -36,7 +39,6 @@ class SubtitleTranslatorGUI(QMainWindow):
     def __init__(self):
         """
         Initializes the SubtitleTranslatorGUI window, setting up UI components and layout.
-
         """
         if SubtitleTranslatorGUI._instance is not None:
             return
@@ -46,10 +48,8 @@ class SubtitleTranslatorGUI(QMainWindow):
         super().__init__()
         self._initialized = True  # Mark as initialized
 
-
         # The path the user will pick the file from
         self._users_path = ""
-        # The directory where user will want the file to be saved to
 
         super().__init__()
 
@@ -120,6 +120,17 @@ class SubtitleTranslatorGUI(QMainWindow):
         self._translate_button.clicked.connect(self.on_translate_button_clicked)
         main_layout.addWidget(self._translate_button)
 
+        # Progress bar
+        self._progress_bar = QProgressBar(self)
+        self._progress_bar.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self._progress_bar)
+
+        # creating a flag for finished translations
+        self._translation_finished = False
+
+        # creating a worker variable so worker object stays in scope of main
+        #self._worker = TranslationWorker()
+
     def on_file_browse_button_clicked(self):
         """
         Opens a file dialog to allow the user to select a subtitle file.
@@ -171,7 +182,7 @@ class SubtitleTranslatorGUI(QMainWindow):
         # save the translated document
         dir_input = PathHandler.create_output_path(file_input, dir_input,target_lang)
 
-        if translation_ready is False:
+        if self._translation_finished is False:
             if not (file_input and dir_input):
                 self.show_message_box("You have to choose both file and directory.", title="Missing Input", message_type="warning")
             elif source_lang == "" or target_lang == "":
@@ -185,17 +196,46 @@ class SubtitleTranslatorGUI(QMainWindow):
                 self.show_message_box(
                     f"Do you want to start the translation process?",
                     title="Translation Info", message_type="information")
-                payload = TranslationPayload(file_input, dir_input, source_lang, target_lang)
-                self.forward_payload_to_translator_service(payload)
-        else:
-            self.show_message_box("Translation finished. Your file is ready. ", title="Done!",
-                                  message_type="warning")
-            translation_ready = False
 
-    @staticmethod
-    def forward_payload_to_translator_service(payload):
-        translator_service = PATranslatorService(payload)
-        translator_service.process_translation()
+                payload = TranslationPayload(file_input, dir_input, source_lang, target_lang)
+
+                self._progress_bar.setRange(0, 0)  # Indeterminate mode starts
+
+                # Create a new Thread for processing the subtitle
+                self.thread = QThread()
+                # Init worker
+                self.worker = TranslationWorker(payload)
+                # Move worker to the thread
+                self.worker.moveToThread(self.thread)
+                # Connect signals
+                self.thread.started.connect(self.worker.run)
+                self.worker.finished.connect(self.thread.quit)
+                self.worker.finished.connect(self.worker.deleteLater)
+                self.thread.finished.connect(self.thread.deleteLater)
+                self.worker.finished.connect(self.on_translation_finished)
+                # Start the thread
+                self.thread.start()
+
+    def on_translation_finished(self):
+        """
+        This method will be called once the translation worker finishes.
+        It will stop the progress bar and show a completion message and reset the application state
+        """
+        # stop progress bar
+        self._progress_bar.setRange(0, 100)
+        self._progress_bar.setValue(100)
+        # set the flag
+        self._translation_finished = True
+
+        self.show_message_box("Translation finished. Your file is ready.\n\n"
+                              "The translation was powered by Lingva AI, which provides an automated translation service. "
+                              "Please note that the translation might not be perfect, as it can sometimes be a bit rough. "
+                              "If you're looking for a more polished translation, we recommend opening the file in your default "
+                              "file editor and making any necessary adjustments.", title="Done!",
+                              message_type="warning")
+
+        # resetting the variable for the next translation
+        self._translate_button.setEnabled(True)
 
     def show_message_box(self, message, title="Message", message_type="information"):
         msg_box = QMessageBox(self)

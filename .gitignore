@@ -1,28 +1,29 @@
-# Python bytecode
+# Ignore PyInstaller build artifacts
+build/
+dist/
+*.spec
+
+# Ignore Python cache and virtual environment files
 __pycache__/
 *.pyc
-
-# Virtual environments
-.venv/
+*.pyo
+*.pyd
+*.py,cover
+*.so
+.Python
+env/
 venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Environment variables
-.env
-
-# IDEs and editors
+# Ignore IDE-specific files
 .idea/
 .vscode/
-*.iml
-
-# Operating system files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Log and temporary files
-*.log
-*.bak
 *.swp
+*.swo
 
-# Database files
-*.db
+# Ignore other temporary files
+*.log
+*.tmp
+*.bak
