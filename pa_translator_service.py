@@ -4,17 +4,37 @@ import time
 
 class PATranslatorService:
 
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, payload, ):
-        # getting the payload ready for processing
+        self.initialize_payload(payload)
+        self.initialize_translation_attributes()
+
+    def initialize_payload(self, payload):
+        """
+        Setting payload related attributes
+        :param payload: file path, directory path, source language, target language
+        """
         self._path = payload.get_path()
         self._dir_path = payload.get_dir_path()
         self._source_lang = payload.get_source_lang()
         self._target_lang = payload.get_target_lang()
 
+    def initialize_translation_attributes(self):
+        """
+        Init translation related attributes
+        """
         # Sets the maximum number of characters to be handled at once. Defaults to 2000, which is considered optimal for Lingva Translate API requests.
         self._max_chars = 2000
         # Dictionary to store sequence numbers as keys and corresponding timestamps as values
         self._sequence_numbers_and_timestamps = {}
+        # Needed for updating the progress bar in the GUI
+        self._percentage_of_translation_complete = 0
 
     @staticmethod
     def read_file(file_path):
@@ -26,7 +46,7 @@ class PATranslatorService:
             FileNotFoundError: If the file does not exist at the specified path.
             PermissionError: If the program does not have permission to access the file.
             Exception: Any other unexpected errors during file reading.
-            """
+        """
         try:
             # with open(file_path, "r", encoding="utf-8") as file:
             with open(file_path, "r", encoding="latin-1") as file:
@@ -217,14 +237,31 @@ class PATranslatorService:
             list: A list of translated and reassembled subtitle chunks.
         """
         translated_chunks = []
-
+        percentage_step = round(100 / len(chunks), 2)
+        #
         for chunk  in chunks:
             chunk = chunk.strip().replace("\n", " ")
             translation = PATranslatorService.translate_text(source_lang, target_lang, chunk)
             translation = PATranslatorService.line_reassemble(translation)
             translated_chunks.append(translation)
 
+            PATranslatorService._instance.calculate_translation_progress_in_percents(percentage_step)
+
         return translated_chunks
+
+
+    def calculate_translation_progress_in_percents(self, step):
+        """
+        Calculates the progress when individual chunks are translated and pings the update_progress_bar
+        method in gui.py
+        :param step: this much is added to the progress bar progress with each chunk being translated
+        """
+        self._percentage_of_translation_complete += step
+
+        from gui import SubtitleTranslatorGUI
+        gui_instance = SubtitleTranslatorGUI.get_instance()
+        if gui_instance:
+            gui_instance.update_progress_bar(int(self._percentage_of_translation_complete))
 
     def reassemble_subs(self, translated_chunks):
         """

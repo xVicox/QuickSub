@@ -1,6 +1,5 @@
 import os
 
-
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
@@ -17,7 +16,6 @@ from PyQt5.QtWidgets import (
     QMessageBox, QProgressBar
 )
 
-from pa_translator_service import PATranslatorService
 from translation_payload import TranslationPayload
 from translation_worker import TranslationWorker
 
@@ -33,6 +31,7 @@ class SubtitleTranslatorGUI(QMainWindow):
         Returns:
             SubtitleTranslatorGUI: The singleton instance of the SubtitleTranslatorGUI.
         """
+
         if SubtitleTranslatorGUI._instance is None:
             SubtitleTranslatorGUI._instance = SubtitleTranslatorGUI()
         return SubtitleTranslatorGUI._instance
@@ -41,6 +40,7 @@ class SubtitleTranslatorGUI(QMainWindow):
         """
         Initializes the SubtitleTranslatorGUI window, setting up UI components and layout.
         """
+
         if SubtitleTranslatorGUI._instance is not None:
             return
         super().__init__()
@@ -54,7 +54,7 @@ class SubtitleTranslatorGUI(QMainWindow):
 
         super().__init__()
 
-        self.setWindowTitle("Subtitle Translator")
+        self.setWindowTitle("QuickSub")
         self.setGeometry(100, 100, 600, 250)
         self.setWindowIcon(QIcon("resources/app_icon.png"))
 
@@ -130,9 +130,6 @@ class SubtitleTranslatorGUI(QMainWindow):
         # creating a flag for finished translations
         self._translation_finished = False
 
-        # creating a worker variable so worker object stays in scope of main
-        #self._worker = TranslationWorker()
-
     def on_file_browse_button_clicked(self):
         """
         Opens a file dialog to allow the user to select a subtitle file.
@@ -201,7 +198,9 @@ class SubtitleTranslatorGUI(QMainWindow):
 
                 payload = TranslationPayload(file_input, dir_input, source_lang, target_lang)
 
+                """
                 self._progress_bar.setRange(0, 0)  # Indeterminate mode starts
+                """
 
                 # Create a new Thread for processing the subtitle
                 self.thread = QThread()
@@ -225,14 +224,14 @@ class SubtitleTranslatorGUI(QMainWindow):
                 self._target_dropdown.setEnabled(False)
                 self._translate_button.setEnabled(False)
 
+    def update_progress_bar(self, percent):
+        self._progress_bar.setValue(percent)
+
     def on_translation_finished(self):
         """
         This method will be called once the translation worker finishes.
         It will stop the progress bar and show a completion message and reset the application state
         """
-        # stop progress bar
-        self._progress_bar.setRange(0, 100)
-        self._progress_bar.setValue(100)
         # set the flag
         self._translation_finished = True
 
