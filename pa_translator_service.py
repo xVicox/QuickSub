@@ -1,5 +1,6 @@
 import requests
 import re
+import time
 
 class PATranslatorService:
 
@@ -289,6 +290,13 @@ class PATranslatorService:
         processed_subtitle = self.process_subtitles(unprocessed_subtitle)
         #create chunks
         chunks = self.create_chunks(processed_subtitle)
+        print("Translation starting now!")
+        start_time = time.time()
         translated_chunks = self.translate_chunks(chunks, self._source_lang, self._target_lang)
+        print("Translation done!")
+        end_time = time.time()
+        print(f"Start time: {start_time}")
+        print(f"End time: {end_time}")
+        print(f"Elapsed: {end_time - start_time}")
         reassembled_chunks = self.reassemble_subs(translated_chunks)
         self.write_to_file(reassembled_chunks, self._dir_path)

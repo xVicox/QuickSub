@@ -1,4 +1,8 @@
+from docker_checker import DockerChecker
 from gui import SubtitleTranslatorGUI
 
 if __name__ == "__main__":
-    SubtitleTranslatorGUI.run()
+    docker_checker = DockerChecker()
+    docker_checker.check_docker(required_containers=["trusting_stonebraker"])  # Check Docker and containers
+    docker_checker.wait_for_service("http://localhost:3000/api")
+    SubtitleTranslatorGUI.run()  # Run the GUI if Docker and containers are available

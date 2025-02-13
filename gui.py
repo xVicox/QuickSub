@@ -2,6 +2,7 @@ import os
 
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -55,6 +56,7 @@ class SubtitleTranslatorGUI(QMainWindow):
 
         self.setWindowTitle("Subtitle Translator")
         self.setGeometry(100, 100, 600, 250)
+        self.setWindowIcon(QIcon("resources/app_icon.png"))
 
         # Main widget
         central_widget = QWidget()
@@ -216,6 +218,13 @@ class SubtitleTranslatorGUI(QMainWindow):
                 # Start the thread
                 self.thread.start()
 
+                # Make buttons unresponsive while the translation is being processed
+                self._file_browse_button.setEnabled(False)
+                self._dir_browse_button.setEnabled(False)
+                self._source_dropdown.setEnabled(False)
+                self._target_dropdown.setEnabled(False)
+                self._translate_button.setEnabled(False)
+
     def on_translation_finished(self):
         """
         This method will be called once the translation worker finishes.
@@ -235,6 +244,13 @@ class SubtitleTranslatorGUI(QMainWindow):
                               message_type="warning")
 
         # resetting the variable for the next translation
+        self._translate_button.setEnabled(True)
+
+        # Enabling functions of buttons and dropdowns
+        self._file_browse_button.setEnabled(True)
+        self._dir_browse_button.setEnabled(True)
+        self._source_dropdown.setEnabled(True)
+        self._target_dropdown.setEnabled(True)
         self._translate_button.setEnabled(True)
 
     def show_message_box(self, message, title="Message", message_type="information"):
