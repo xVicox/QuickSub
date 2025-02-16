@@ -107,24 +107,23 @@ class DockerChecker:
     def start_container(container_name):
         """
         Starts the Docker container if it's not running.
-        If the image is missing, it loads it from lingva_translate.tar and then runs the container.
+        If the image is missing, it loads it from the local tar file.
         """
-        # Check if the image exists
-        image_check = subprocess.run(
-            ['docker', 'images', '-q', 'thedaviddelta/lingva-translate'],
-            capture_output=True, text=True
-        )
+        # Path to the tar file
+        image_path = os.path.join(os.getcwd(), 'resources', 'docker', 'lingva_translate.tar')
 
-        if not image_check.stdout.strip():  # If the image ID is empty, image is missing
-            print("Lingva Translate image not found. Loading from lingva_translate.tar...")
-            image_path = os.path.join(os.getcwd(), 'docker', 'lingva_translate.tar')
+        # Check if the tar file exists
+        if not os.path.exists(image_path):
+            print(f"Error: lingva_translate.tar not found at {image_path}. Ensure it's bundled with the app.")
+            return
 
-            if not os.path.exists(image_path):
-                print(f"Image file {image_path} not found! Ensure it exists.")
-                return
-
+        # Load the image from the tar file
+        try:
             subprocess.run(['docker', 'load', '-i', image_path], check=True)
             print("Image loaded successfully!")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to load image from tar: {e}")
+            return
 
         # Check if container is already running
         result = subprocess.run(['docker', 'ps', '--filter', f'name={container_name}', '--format', '{{.Names}}'],
@@ -136,10 +135,13 @@ class DockerChecker:
 
         # Run the container
         print("Starting Lingva Translate container...")
-        subprocess.run([
-            'docker', 'run', '-d', '-p', '3000:3000', '--name', container_name, 'thedaviddelta/lingva-translate'
-        ], check=True)
-        print(f"Container '{container_name}' started on port 3000!")
+        try:
+            subprocess.run([
+                'docker', 'run', '-d', '-p', '3000:3000', '--name', container_name, 'thedaviddelta/lingva-translate'
+            ], check=True)
+            print(f"Container '{container_name}' started on port 3000!")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to start container: {e}")
 
     @staticmethod
     def wait_for_container(container_name, timeout=30):
