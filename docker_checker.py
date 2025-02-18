@@ -107,6 +107,7 @@ class DockerChecker:
     def start_container(container_name):
         """
         Starts the Docker container if it's not running.
+        If the container exists but is stopped, it starts it.
         If the image is missing, it loads it from the local tar file.
         """
         # Path to the tar file
@@ -114,7 +115,7 @@ class DockerChecker:
 
         # Check if the tar file exists
         if not os.path.exists(image_path):
-            print(f"Error: lingva_translate.tar not found at {image_path}. Ensure it's bundled with the app.")
+            print(f"Image file {image_path} not found! Ensure it exists.")
             return
 
         # Load the image from the tar file
@@ -133,7 +134,22 @@ class DockerChecker:
             print(f"Container '{container_name}' is already running.")
             return
 
-        # Run the container
+        # Check if container exists but is stopped
+        result_all = subprocess.run(
+            ['docker', 'ps', '-a', '--filter', f'name={container_name}', '--format', '{{.Names}}'],
+            capture_output=True, text=True)
+
+        if container_name in result_all.stdout:
+            print(f"Container '{container_name}' exists but is stopped. Starting it...")
+            try:
+                subprocess.run(['docker', 'start', container_name], check=True)
+                print(f"Container '{container_name}' started!")
+                return
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to start container: {e}")
+                return
+
+        # Run the container if it doesn't exist
         print("Starting Lingva Translate container...")
         try:
             subprocess.run([
