@@ -120,29 +120,43 @@ class DockerChecker:
 
         # Load the image from the tar file
         try:
-            subprocess.run(['docker', 'load', '-i', image_path], check=True)
+            print("Loading Docker image...")
+            result = subprocess.run(['docker', 'load', '-i', image_path], capture_output=True, text=True)
+            print(result.stdout)
+            if result.stderr:
+                print(result.stderr)
             print("Image loaded successfully!")
         except subprocess.CalledProcessError as e:
             print(f"Failed to load image from tar: {e}")
             return
 
-        # Check if container is already running
+        print("Checking for running container...")
         result = subprocess.run(['docker', 'ps', '--filter', f'name={container_name}', '--format', '{{.Names}}'],
                                 capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
 
         if container_name in result.stdout:
             print(f"Container '{container_name}' is already running.")
             return
 
         # Check if container exists but is stopped
+        print("Checking for stopped container...")
         result_all = subprocess.run(
             ['docker', 'ps', '-a', '--filter', f'name={container_name}', '--format', '{{.Names}}'],
             capture_output=True, text=True)
+        print(result_all.stdout)
+        if result_all.stderr:
+            print(result_all.stderr)
 
         if container_name in result_all.stdout:
             print(f"Container '{container_name}' exists but is stopped. Starting it...")
             try:
-                subprocess.run(['docker', 'start', container_name], check=True)
+                result = subprocess.run(['docker', 'start', container_name], capture_output=True, text=True)
+                print(result.stdout)
+                if result.stderr:
+                    print(result.stderr)
                 print(f"Container '{container_name}' started!")
                 return
             except subprocess.CalledProcessError as e:
@@ -152,9 +166,12 @@ class DockerChecker:
         # Run the container if it doesn't exist
         print("Starting Lingva Translate container...")
         try:
-            subprocess.run([
+            result = subprocess.run([
                 'docker', 'run', '-d', '-p', '3000:3000', '--name', container_name, 'thedaviddelta/lingva-translate'
-            ], check=True)
+            ], capture_output=True, text=True)
+            print(result.stdout)
+            if result.stderr:
+                print(result.stderr)
             print(f"Container '{container_name}' started on port 3000!")
         except subprocess.CalledProcessError as e:
             print(f"Failed to start container: {e}")
@@ -178,7 +195,7 @@ class DockerChecker:
         """
         Waits for the translation service to become available after starting the container.
         """
-        print(f"🔍 Waiting for service at {url} to be ready... (Timeout: {timeout}s)")
+        print(f"Waiting for service at {url} to be ready... (Timeout: {timeout}s)")
         start_time = time.time()
         elapsed_time = 0
 
@@ -190,7 +207,7 @@ class DockerChecker:
                     return True
                 else:
                     print(f"Service responded with status {response.status_code}, retrying...")
-            except (requests.ConnectionError, requests.Timeout):
+            except (requests.ConnectionError, requests.Timeout) as e:
                 print("Service not ready yet, retrying...")
                 elapsed_time += 5
                 print(f"Elapsed time: {elapsed_time}")
