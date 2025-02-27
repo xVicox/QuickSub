@@ -111,7 +111,7 @@ class DockerChecker:
         If the image is missing, it loads it from the local tar file.
         """
         # Path to the tar file
-        image_path = os.path.join(os.getcwd(), 'resources', 'docker', 'lingva_translate.tar')
+        image_path = os.path.join(os.getcwd(), 'dist', 'resources', 'docker', 'lingva_translate.tar')
 
         # Check if the tar file exists
         if not os.path.exists(image_path):
