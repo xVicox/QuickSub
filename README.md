@@ -1,0 +1,41 @@
+QuickSub - Subtitle Translator
+
+Overview
+
+QuickSub is a simple subtitle translation application designed primarily for translating subtitles. This is the first version, offering a basic GUI where users can select a file for translation.
+
+Features
+
+Supports .srt and .txt files (should work with any text-based file that can be opened in a text editor).
+
+Currently supports English and Serbian translations.
+
+Open to adding more languages based on user feedback.
+
+Requirements
+
+Windows (Required)
+
+Docker Installed (Needed for translation functionality)
+
+Usage
+
+Open the application.
+
+Select the file you want to translate.
+
+Choose the desired language (English or Serbian).
+
+Start the translation process.
+
+Feedback
+
+Your feedback is valuable! If you need additional language support or have any suggestions, feel free to share your thoughts.
+
+Future Improvements
+
+Expand language support based on user requests.
+
+Enhance the GUI for a better user experience.
+
+Additional file format compatibility.
