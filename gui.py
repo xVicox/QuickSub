@@ -1,4 +1,7 @@
 import os
+import subprocess
+import atexit
+import platform
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon
@@ -242,15 +245,17 @@ class SubtitleTranslatorGUI(QMainWindow):
                               "file editor and making any necessary adjustments.", title="Done!",
                               message_type="warning")
 
-        # resetting the variable for the next translation
-        self._translate_button.setEnabled(True)
-
         # Enabling functions of buttons and dropdowns
         self._file_browse_button.setEnabled(True)
         self._dir_browse_button.setEnabled(True)
         self._source_dropdown.setEnabled(True)
         self._target_dropdown.setEnabled(True)
         self._translate_button.setEnabled(True)
+
+        # resetting the variables for the next translation
+        self._translate_button.setEnabled(True)
+        self._translation_finished = False
+
 
     def show_message_box(self, message, title="Message", message_type="information"):
         msg_box = QMessageBox(self)
@@ -274,7 +279,49 @@ class SubtitleTranslatorGUI(QMainWindow):
         app = QApplication(sys.argv)
         window = SubtitleTranslatorGUI()
         window.show()
+        # Register close_docker to be called on app exit
+        atexit.register(lambda: window.close_docker())
         sys.exit(app.exec_())
+
+    @staticmethod
+    def close_docker():
+        """Stop the Docker container and Docker Desktop (if on Windows)."""
+        print("Closing Docker...")
+        try:
+            # Stop the Docker container
+            subprocess.run(
+                ["powershell", "-Command", "Get-Process | Where-Object { $_.ProcessName -like '*Docker*' }"],
+                capture_output=True,
+                text=True,
+            )
+            print("Docker container stopped successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to stop Docker container: {e}")
+        except FileNotFoundError:
+            print("Docker command not found. Is Docker installed?")
+
+        # Stop Docker Desktop on Windows
+        if platform.system() == "Windows":
+            try:
+                # Check if Docker Desktop is running
+                result = subprocess.run(
+                    ["powershell", "-Command", "Get-Process -Name 'Docker Desktop' -ErrorAction SilentlyContinue"],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:  # Docker Desktop is running
+                    print("Stopping Docker Desktop...")
+                    subprocess.run(["powershell", "-Command", "Stop-Process -Name 'Docker Desktop'"], check=True)
+                    print("Docker Desktop stopped successfully.")
+                else:
+                    print("Docker Desktop is not running.")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to stop Docker Desktop: {e}")
+
+    def closeEvent(self, event):
+        """Override the closeEvent to ensure Docker is closed when the window is closed."""
+        self.close_docker()
+        event.accept()  # Ensure the window closes properly
 
 class PathHandler:
     """
