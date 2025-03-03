@@ -15,8 +15,9 @@ QuickSub is a simple subtitle translation application designed primarily for tra
 ## Usage
 1. Open the application.
 2. Select the file you want to translate.
-3. Choose the desired language (English or Serbian).
-4. Start the translation process.
+3. Select destination of the translated file.
+4. Choose the desired language (English or Serbian).
+5. Start the translation process.
 
 ## Feedback
 Your feedback is valuable! If you need additional language support or have any suggestions, feel free to share your thoughts.
