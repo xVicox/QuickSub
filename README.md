@@ -27,3 +27,7 @@ Your feedback is valuable! If you need additional language support or have any s
 - Expand language support based on user requests.
 - Enhance the GUI for a better user experience.
 - Additional file format compatibility.
+
+## Credits  
+This project was built with the help of [Lingva Translate](https://github.com/TheDavidDelta/lingva-translate).  
+
