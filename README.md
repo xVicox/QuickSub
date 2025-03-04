@@ -10,7 +10,7 @@ QuickSub is a simple subtitle translation application designed primarily for tra
 
 ## Requirements
 - **Windows** (Required)
-- **Docker Installed** (Needed for translation functionality)
+- **Docker Installed** (Needed for translation functionality) https://docs.docker.com/desktop/setup/install/windows-install/
 
 ## Usage
 1. Open the application.
